@@ -3,22 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Modern Tetris</title>
+    <title>Modern Tetris & Puzzle</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Prompt:wght@300;400;600&display=swap');
         
         body {
             font-family: 'Prompt', sans-serif;
-            touch-action: none;
+            touch-action: none; /* ป้องกันการเลื่อนจอ */
             background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
             color: #f8fafc;
             overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
         }
 
-        .font-epic {
-            font-family: 'Orbitron', sans-serif;
-        }
+        .font-epic { font-family: 'Orbitron', sans-serif; }
 
         .glass-panel {
             background: rgba(255, 255, 255, 0.03);
@@ -28,23 +28,19 @@
             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
         }
 
-        /* เอา Style ของ canvas ออกเพื่อไปใช้ Tailwind แทนในการจัดการ Responsive */
-
         .btn-modern {
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.1);
             color: #e2e8f0;
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
             transition: all 0.15s ease;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            -webkit-tap-highlight-color: transparent;
         }
 
         .btn-modern:active {
             transform: scale(0.92);
             background: rgba(99, 102, 241, 0.3);
             border-color: rgba(99, 102, 241, 0.5);
-            box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
         }
 
         .btn-glow {
@@ -57,119 +53,168 @@
             box-shadow: 0 0 25px rgba(124, 58, 237, 0.8);
             transform: translateY(-2px);
         }
+
+        canvas {
+            background-color: #020617;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            transition: box-shadow 0.2s;
+        }
+
+        .menu-btn {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(99, 102, 241, 0.4);
+            transition: all 0.3s ease;
+        }
+        .menu-btn:hover {
+            background: rgba(99, 102, 241, 0.2);
+            border-color: rgba(124, 58, 237, 0.8);
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(124, 58, 237, 0.4);
+        }
     </style>
 </head>
-<body class="flex flex-col items-center justify-center h-[100dvh] overflow-hidden">
+<body class="w-full h-[100dvh] flex flex-col items-center justify-center relative">
 
-    <div class="w-full max-w-md px-2 py-2 sm:px-4 sm:py-4 flex flex-col h-full relative">
-        <!-- Top Right Buttons -->
-        <div class="absolute top-2 right-2 sm:top-4 sm:right-4 flex gap-2 z-10">
-            <button id="pause-btn" class="w-8 h-8 rounded-full btn-modern flex items-center justify-center text-slate-300 hover:text-cyan-400 transition shadow-lg" aria-label="Pause">
+    <!-- ================= MAIN MENU ================= -->
+    <div id="main-menu" class="absolute inset-0 z-50 flex flex-col items-center justify-center p-4 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+PHBhdGggZD0iTTAgMGg0MHY0MEgweiIgZmlsbD0ibm9uZSIvPPHBhdGggZD0iTTAgMGg0MHY0MEgweiIgZmlsbC1vcGFjaXR5PSIuMDUiIGZpbGw9IiNmZmYiLz48L3N2Zz4=')]">
+        <h1 class="text-4xl sm:text-6xl font-bold tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-500 font-epic mb-2 drop-shadow-[0_0_15px_rgba(34,211,238,0.5)] text-center leading-tight">
+            NEON<br>BLOCKS
+        </h1>
+        <p class="text-slate-400 mb-12 font-light tracking-wide text-sm sm:text-base text-center">เลือกโหมดที่คุณต้องการเล่น</p>
+        
+        <div class="flex flex-col gap-6 w-full max-w-xs">
+            <button onclick="switchMode('tetris')" class="menu-btn glass-panel py-4 px-6 rounded-2xl flex flex-col items-center group">
+                <span class="text-xl font-epic font-bold text-cyan-400 group-hover:text-white transition">CLASSIC TETRIS</span>
+                <span class="text-xs text-slate-400 mt-1">บล็อกหล่นจากด้านบน</span>
+            </button>
+            <button onclick="switchMode('puzzle')" class="menu-btn glass-panel py-4 px-6 rounded-2xl flex flex-col items-center group">
+                <span class="text-xl font-epic font-bold text-purple-400 group-hover:text-white transition">BLOCK PUZZLE</span>
+                <span class="text-xs text-slate-400 mt-1">ลากวาง ระเบิดแนวตั้ง/นอน</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- ================= GAME CONTAINER (TETRIS) ================= -->
+    <div id="tetris-view" class="hidden w-full max-w-md px-2 py-2 sm:px-4 sm:py-4 flex-col h-full relative">
+        <!-- Top Nav -->
+        <div class="absolute top-2 left-2 sm:top-4 sm:left-4 z-10 flex gap-2">
+            <button onclick="goToMenu()" class="w-8 h-8 rounded-full btn-modern flex items-center justify-center text-slate-300 hover:text-red-400">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5m7 7-7-7 7-7"/></svg>
+            </button>
+        </div>
+        <div class="absolute top-2 right-2 sm:top-4 sm:right-4 z-10 flex gap-2">
+            <button onclick="togglePause()" class="w-8 h-8 rounded-full btn-modern flex items-center justify-center text-slate-300 hover:text-cyan-400 shadow-lg">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M6 4h4v16H6zm8 0h4v16h-4z"/></svg>
             </button>
-            <button id="guide-btn" class="w-8 h-8 rounded-full btn-modern flex items-center justify-center text-slate-300 font-bold hover:text-cyan-400 transition shadow-lg" aria-label="Guide">
-                ?
+        </div>
+
+        <div class="text-center mb-1 sm:mb-2 mt-1 sm:mt-0">
+            <h2 class="text-xl sm:text-2xl font-bold tracking-widest text-cyan-400 font-epic drop-shadow-md">TETRIS</h2>
+        </div>
+
+        <div class="grid grid-cols-3 w-full mb-1 sm:mb-2 px-1 gap-1 sm:gap-2">
+            <div class="glass-panel px-1 py-1 rounded-xl text-center">
+                <span class="block text-[9px] text-slate-400 font-epic tracking-wider">SCORE</span>
+                <span id="tetris-score" class="text-lg font-bold text-cyan-400 font-epic">0</span>
+            </div>
+            <div class="glass-panel px-1 py-1 rounded-xl text-center relative overflow-hidden">
+                <div class="absolute inset-0 bg-gradient-to-r from-amber-500/10 to-orange-600/10 blur-xl"></div>
+                <span class="block text-[9px] text-amber-300 font-epic relative z-10">BEST</span>
+                <span id="tetris-highscore" class="text-lg font-bold text-amber-400 font-epic relative z-10">0</span>
+            </div>
+            <div class="glass-panel px-1 py-1 rounded-xl text-center">
+                <span class="block text-[9px] text-slate-400 font-epic tracking-wider">LEVEL</span>
+                <span id="tetris-level" class="text-lg font-bold text-indigo-400 font-epic">1</span>
+            </div>
+        </div>
+
+        <div id="tetris-container" class="flex-1 w-full relative flex justify-center items-center my-1 min-h-0">
+            <div id="tetris-wrapper" class="relative">
+                <canvas id="tetris-canvas" width="200" height="400" class="w-full h-full block rounded-lg"></canvas>
+                <div id="tetris-overlay" class="absolute inset-0 glass-panel rounded-lg flex flex-col items-center justify-center z-10 hidden" style="backdrop-filter: blur(5px);">
+                    <div class="text-center px-4">
+                        <h2 class="text-2xl font-epic font-bold text-red-500 mb-2">GAME OVER</h2>
+                        <p id="tetris-msg" class="text-sm text-slate-300 mb-6">FINAL SCORE: <span class="text-cyan-400 font-bold">0</span></p>
+                        <button onclick="startTetrisGame()" class="btn-glow px-6 py-2 rounded-full font-bold tracking-wide font-epic">RETRY</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tetris Controls -->
+        <div class="grid grid-cols-3 gap-1 sm:gap-2 w-full mt-auto mb-1 px-1 md:hidden">
+            <button id="btn-left" class="btn-modern h-12 rounded-xl flex items-center justify-center text-2xl"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg></button>
+            <button id="btn-rotate" class="btn-modern h-12 rounded-xl flex items-center justify-center text-2xl"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg></button>
+            <button id="btn-right" class="btn-modern h-12 rounded-xl flex items-center justify-center text-2xl"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></button>
+            <div class="col-span-3"><button id="btn-down" class="btn-modern h-12 w-full rounded-xl flex items-center justify-center text-lg tracking-widest font-epic">DROP</button></div>
+        </div>
+    </div>
+
+    <!-- ================= GAME CONTAINER (BLOCK PUZZLE) ================= -->
+    <div id="puzzle-view" class="hidden w-full max-w-md px-2 py-2 sm:px-4 sm:py-4 flex-col h-full relative">
+        <!-- Top Nav -->
+        <div class="absolute top-2 left-2 sm:top-4 sm:left-4 z-10 flex gap-2">
+            <button onclick="goToMenu()" class="w-8 h-8 rounded-full btn-modern flex items-center justify-center text-slate-300 hover:text-red-400">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5m7 7-7-7 7-7"/></svg>
+            </button>
+        </div>
+        <div class="absolute top-2 right-2 sm:top-4 sm:right-4 z-10 flex gap-2">
+            <button onclick="togglePause()" class="w-8 h-8 rounded-full btn-modern flex items-center justify-center text-slate-300 hover:text-cyan-400 shadow-lg">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M6 4h4v16H6zm8 0h4v16h-4z"/></svg>
             </button>
         </div>
 
-        <!-- Header -->
-        <div class="text-center mb-1 sm:mb-2">
-            <h1 class="text-2xl sm:text-4xl font-bold tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-500 font-epic mb-0 sm:mb-1 drop-shadow-lg">
-                TETRIS
-            </h1>
+        <div class="text-center mb-1 sm:mb-2 mt-1 sm:mt-0">
+            <h2 class="text-xl sm:text-2xl font-bold tracking-widest text-purple-400 font-epic drop-shadow-md">PUZZLE</h2>
         </div>
 
-        <!-- Score Board -->
-        <div class="grid grid-cols-3 w-full mb-1 sm:mb-2 px-1 sm:px-2 gap-1 sm:gap-2">
+        <div class="grid grid-cols-2 w-full mb-1 sm:mb-2 px-1 gap-1 sm:gap-2">
             <div class="glass-panel px-1 py-1 sm:py-2 rounded-xl text-center">
-                <span class="block text-[9px] sm:text-[10px] text-slate-400 font-epic tracking-wider">SCORE</span>
-                <span id="score" class="text-lg sm:text-xl font-bold text-cyan-400 font-epic">0</span>
+                <span class="block text-[10px] text-slate-400 font-epic tracking-wider">SCORE</span>
+                <span id="puzzle-score" class="text-xl font-bold text-cyan-400 font-epic">0</span>
             </div>
             <div class="glass-panel px-1 py-1 sm:py-2 rounded-xl text-center relative overflow-hidden">
                 <div class="absolute inset-0 bg-gradient-to-r from-amber-500/10 to-orange-600/10 blur-xl"></div>
-                <span class="block text-[9px] sm:text-[10px] text-amber-300 font-epic tracking-wider relative z-10">BEST</span>
-                <span id="highscore" class="text-lg sm:text-xl font-bold text-amber-400 font-epic relative z-10">0</span>
-            </div>
-            <div class="glass-panel px-1 py-1 sm:py-2 rounded-xl text-center">
-                <span class="block text-[9px] sm:text-[10px] text-slate-400 font-epic tracking-wider">LEVEL</span>
-                <span id="level" class="text-lg sm:text-xl font-bold text-indigo-400 font-epic">1</span>
+                <span class="block text-[10px] text-amber-300 font-epic tracking-wider relative z-10">BEST</span>
+                <span id="puzzle-highscore" class="text-xl font-bold text-amber-400 font-epic relative z-10">0</span>
             </div>
         </div>
 
-        <!-- Game Canvas Area -->
-        <div id="game-container" class="flex-1 w-full relative flex justify-center items-center my-1 sm:my-2 min-h-0">
-            <div id="game-wrapper" class="relative">
-                <!-- Canvas เปลี่ยนมาใช้ class เพื่อให้ขยายเต็ม Wrapper ยืดหยุ่นได้ -->
-                <canvas id="tetris" width="200" height="400" class="w-full h-full block rounded-lg bg-[#020617] shadow-[0_0_20px_rgba(99,102,241,0.2)] border border-[#6366f14d] transition-shadow duration-200"></canvas>
+        <!-- Puzzle Canvas Area -->
+        <div id="puzzle-container" class="flex-1 w-full relative flex justify-center items-center my-1 min-h-0">
+            <div id="puzzle-wrapper" class="relative">
+                <!-- Canvas ของ Puzzle สัดส่วนความกว้าง:ความสูง = 10:14 (บอร์ด 10x10 + พื้นที่วางบล็อกด้านล่าง 10x4) -->
+                <canvas id="puzzle-canvas" width="200" height="280" class="w-full h-full block rounded-lg"></canvas>
                 
-                <!-- Start / Game Over Overlay -->
-                <div id="overlay" class="absolute inset-0 glass-panel rounded-lg flex flex-col items-center justify-center z-10" style="backdrop-filter: blur(5px);">
+                <div id="puzzle-overlay" class="absolute inset-0 glass-panel rounded-lg flex flex-col items-center justify-center z-10 hidden" style="backdrop-filter: blur(5px);">
                     <div class="text-center px-4">
-                        <h2 class="text-2xl font-epic font-bold text-white mb-2" id="overlay-title">READY?</h2>
-                        <p id="overlay-msg" class="text-sm text-slate-300 mb-6">เปิดเสียงเพื่อความอลังการ</p>
-                        <button id="start-btn" class="btn-glow px-6 py-2 rounded-full font-bold tracking-wide font-epic">
-                            START
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Pause Overlay -->
-                <div id="pause-overlay" class="hidden absolute inset-0 glass-panel rounded-lg flex-col items-center justify-center z-20" style="backdrop-filter: blur(8px); background: rgba(15, 23, 42, 0.7);">
-                    <div class="text-center px-4">
-                        <h2 class="text-3xl font-epic font-bold text-cyan-400 mb-6 tracking-widest animate-pulse">PAUSED</h2>
-                        <div class="flex flex-col gap-3">
-                            <button id="resume-btn" class="btn-glow px-6 py-2 rounded-full font-bold tracking-wide font-epic">
-                                RESUME
-                            </button>
-                            <button id="restart-pause-btn" class="btn-modern px-6 py-2 rounded-full font-bold tracking-wide font-epic text-red-400 hover:bg-red-500/20 hover:border-red-500/50">
-                                RESTART
-                            </button>
-                        </div>
+                        <h2 class="text-2xl font-epic font-bold text-red-500 mb-2">OUT OF MOVES</h2>
+                        <p id="puzzle-msg" class="text-sm text-slate-300 mb-6">FINAL SCORE: <span class="text-purple-400 font-bold">0</span></p>
+                        <button onclick="startPuzzleGame()" class="btn-glow px-6 py-2 rounded-full font-bold tracking-wide font-epic">RETRY</button>
                     </div>
                 </div>
             </div>
         </div>
+        <!-- พื้นที่ว่างด้านล่างเพื่อชดเชยปุ่มควบคุมที่หายไป ให้ layout ดูสมดุล -->
+        <div class="h-4 w-full md:hidden"></div>
+    </div>
 
-        <!-- Guide Modal -->
-        <div id="guide-modal" class="hidden fixed inset-0 z-50 flex-col items-center justify-center px-4" style="backdrop-filter: blur(10px); background: rgba(15, 23, 42, 0.85);">
-            <div class="glass-panel w-full max-w-sm rounded-2xl p-6 flex flex-col items-center border border-cyan-500/30 shadow-2xl shadow-cyan-500/20 text-center">
-                <h2 class="text-2xl font-epic font-bold text-cyan-400 mb-6 tracking-widest">CONTROLS</h2>
-                    <div class="text-sm text-slate-300 space-y-4 mb-8 text-left w-full px-4">
-                        <p class="flex items-center gap-3"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg> <b class="text-base">เลื่อนซ้าย</b></p>
-                        <p class="flex items-center gap-3"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg> <b class="text-base">เลื่อนขวา</b></p>
-                        <p class="flex items-center gap-3"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg> <b class="text-base">หมุนบล็อก</b></p>
-                        <p class="flex items-center gap-3 text-cyan-200 mt-2"><span class="font-epic tracking-widest font-bold text-lg">DROP</span>: <span class="text-base">กดค้างเพื่อลงไว</span></p>
-                        <div class="mt-6 text-xs text-slate-400 border-t border-slate-700 pt-4 leading-relaxed text-center">
-                            💡 หากเล่นบนคอมพิวเตอร์<br>สามารถใช้ปุ่มลูกศร ⬆️⬇️⬅️➡️ บนคีย์บอร์ดได้เลย
-                        </div>
-                    </div>
-                <button id="close-guide-btn" class="btn-glow px-8 py-3 rounded-full font-bold tracking-widest font-epic text-sm">
-                    CLOSE
-                </button>
-            </div>
-        </div>
-
-        <!-- Mobile Controls -->
-        <div class="grid grid-cols-3 gap-1 sm:gap-2 w-full mt-auto mb-1 px-1 md:hidden">
-            <button id="btn-left" class="btn-modern h-12 rounded-xl flex items-center justify-center text-2xl">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-            </button>
-            <button id="btn-rotate" class="btn-modern h-12 rounded-xl flex items-center justify-center text-2xl">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
-            </button>
-            <button id="btn-right" class="btn-modern h-12 rounded-xl flex items-center justify-center text-2xl">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
-            </button>
-            <div class="col-span-3">
-                <button id="btn-down" class="btn-modern h-12 w-full rounded-xl flex items-center justify-center text-lg tracking-widest font-epic">
-                    DROP
-                </button>
+    <!-- ================= SHARED PAUSE OVERLAY ================= -->
+    <div id="pause-overlay" class="hidden fixed inset-0 z-[60] flex-col items-center justify-center px-4" style="backdrop-filter: blur(8px); background: rgba(15, 23, 42, 0.7);">
+        <div class="glass-panel w-full max-w-[240px] rounded-2xl p-6 flex flex-col items-center border border-cyan-500/30 text-center shadow-2xl">
+            <h2 class="text-3xl font-epic font-bold text-cyan-400 mb-6 tracking-widest animate-pulse">PAUSED</h2>
+            <div class="flex flex-col gap-3 w-full">
+                <button onclick="togglePause()" class="btn-glow w-full py-3 rounded-full font-bold tracking-wide font-epic">RESUME</button>
+                <button onclick="restartCurrentGame()" class="btn-modern w-full py-3 rounded-full font-bold tracking-wide font-epic text-red-400 hover:bg-red-500/20">RESTART</button>
+                <button onclick="goToMenu()" class="btn-modern w-full py-3 rounded-full font-bold tracking-wide font-epic text-slate-400 mt-2">MAIN MENU</button>
             </div>
         </div>
     </div>
 
     <script>
-        // --- ระบบเสียง (Web Audio API) ---
+        // ================= AUDIO SYSTEM =================
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         let audioCtx;
 
@@ -182,50 +227,37 @@
             if (!audioCtx) return;
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
-            osc.type = type;
-            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-            
+            osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
             gain.gain.setValueAtTime(vol, audioCtx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
-            
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start();
-            osc.stop(audioCtx.currentTime + duration);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + duration);
         }
 
-        // เพิ่มฟังก์ชันสร้างเสียง White Noise สำหรับเอฟเฟกต์ระเบิด
         function playNoise(duration, vol = 0.2) {
             if (!audioCtx) return;
             const bufferSize = audioCtx.sampleRate * duration;
             const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
             const data = buffer.getChannelData(0);
-            for (let i = 0; i < bufferSize; i++) {
-                data[i] = Math.random() * 2 - 1; // สุ่มคลื่นเสียงให้เกิดความซ่า (Noise)
-            }
-            const noise = audioCtx.createBufferSource();
-            noise.buffer = buffer;
+            for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+            const noise = audioCtx.createBufferSource(); noise.buffer = buffer;
             const gain = audioCtx.createGain();
-            
             gain.gain.setValueAtTime(vol, audioCtx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
-            
-            noise.connect(gain);
-            gain.connect(audioCtx.destination);
-            noise.start();
+            noise.connect(gain); gain.connect(audioCtx.destination); noise.start();
         }
 
         const sfx = {
-            move: () => playTone(300, 'sine', 0.05, 0.08), // ปรับลดความดังลงมาให้ฟังสบายขึ้น
+            move: () => playTone(300, 'sine', 0.05, 0.08),
             rotate: () => playTone(450, 'square', 0.05, 0.03),
-            drop: () => playTone(150, 'sawtooth', 0.1, 0.1), // เสียงกระแทกพื้น
+            drop: () => playTone(150, 'sawtooth', 0.1, 0.1),
+            place: () => playTone(200, 'sine', 0.1, 0.15), // เสียงวางบล็อก (Puzzle)
             clear: () => {
-                // เสียงสไตล์ 8-bit Level Up / เก็บไอเทม (ฟินกว่าเดิมและดูเป็นรางวัล)
-                playTone(440, 'square', 0.1, 0.1);   // โน้ต A4
-                setTimeout(() => playTone(554, 'square', 0.1, 0.1), 50);   // โน้ต C#5
-                setTimeout(() => playTone(659, 'square', 0.1, 0.1), 100);  // โน้ต E5
-                setTimeout(() => playTone(880, 'sine', 0.4, 0.15), 150);   // โน้ต A5 (หางเสียงใสๆ ปิดท้าย)
-                playNoise(0.15, 0.05); // เสียงวิ้งๆ เบาๆ คล้ายประกายดาว
+                playTone(440, 'square', 0.1, 0.1); 
+                setTimeout(() => playTone(554, 'square', 0.1, 0.1), 50); 
+                setTimeout(() => playTone(659, 'square', 0.1, 0.1), 100);
+                setTimeout(() => playTone(880, 'sine', 0.4, 0.15), 150); 
+                playNoise(0.15, 0.05);
             },
             gameover: () => {
                 playTone(300, 'sawtooth', 0.3, 0.1);
@@ -234,191 +266,161 @@
             }
         };
 
-        const canvas = document.getElementById('tetris');
-        const context = canvas.getContext('2d');
-        const scoreElement = document.getElementById('score');
-        const highScoreElement = document.getElementById('highscore');
-        const levelElement = document.getElementById('level');
-        const overlay = document.getElementById('overlay');
-        const overlayTitle = document.getElementById('overlay-title');
-        const overlayMsg = document.getElementById('overlay-msg');
-        const startBtn = document.getElementById('start-btn');
-
-        // Guide Elements
-        const guideBtn = document.getElementById('guide-btn');
-        const guideModal = document.getElementById('guide-modal');
-        const closeGuideBtn = document.getElementById('close-guide-btn');
-
-        // ฟังก์ชันปรับขนาดกระดานเกมให้ Responsive
-        function resizeGame() {
-            const container = document.getElementById('game-container');
-            const wrapper = document.getElementById('game-wrapper');
-            if (!container || !wrapper) return;
-            
-            const availableWidth = container.clientWidth;
-            const availableHeight = container.clientHeight;
-            
-            // คำนวณขนาดที่ใหญ่ที่สุดที่เป็นไปได้โดยรักษาสัดส่วน 1:2 (กว้าง 10, สูง 20)
-            const scale = Math.min(availableWidth / 10, availableHeight / 20);
-            
-            wrapper.style.width = (scale * 10) + 'px';
-            wrapper.style.height = (scale * 20) + 'px';
-        }
-
-        window.addEventListener('resize', resizeGame);
-        // รันครั้งแรกเมื่อโหลดเสร็จ
-        setTimeout(resizeGame, 0);
-
-        // Pause Elements
-        const pauseBtn = document.getElementById('pause-btn');
-        const pauseOverlay = document.getElementById('pause-overlay');
-        const resumeBtn = document.getElementById('resume-btn');
-        const restartPauseBtn = document.getElementById('restart-pause-btn');
+        // ================= GLOBAL STATE & UTILS =================
+        let currentMode = 'menu'; // 'menu', 'tetris', 'puzzle'
         let isPaused = false;
+        
+        // Colors for both modes (Neon Style)
+        const colors = [null, '#06b6d4', '#3b82f6', '#f97316', '#eab308', '#22c55e', '#a855f7', '#ef4444', '#ec4899', '#14b8a6'];
 
-        function togglePause() {
-            if (gameOver) return;
-            isPaused = !isPaused;
-            if (isPaused) {
-                pauseOverlay.classList.remove('hidden');
-                pauseOverlay.classList.add('flex');
-                clearInterval(downInterval); // หยุดการลงเร็ว
-            } else {
-                pauseOverlay.classList.add('hidden');
-                pauseOverlay.classList.remove('flex');
-                lastTime = performance.now(); // รีเซ็ตเวลาเพื่อไม่ให้บล็อกร่วงรวดเดียวหลังกดเล่นต่อ
-                requestAnimationFrame(update);
-            }
+        function createMatrix(w, h) {
+            const matrix = [];
+            while (h--) matrix.push(new Array(w).fill(0));
+            return matrix;
         }
 
-        pauseBtn.addEventListener('click', togglePause);
-        resumeBtn.addEventListener('click', togglePause);
-        restartPauseBtn.addEventListener('click', () => {
-            isPaused = false;
-            pauseOverlay.classList.add('hidden');
-            pauseOverlay.classList.remove('flex');
-            startGame();
-        });
-
-        guideBtn.addEventListener('click', () => {
-            if (!isPaused && !gameOver) togglePause(); // ถ้ากดดูคำแนะนำ ให้หยุดเกมด้วย
-            guideModal.classList.remove('hidden'); guideModal.classList.add('flex');
-        });
-        closeGuideBtn.addEventListener('click', () => {
-            guideModal.classList.add('hidden'); guideModal.classList.remove('flex');
-        });
-
-        // ระบบ High Score
-        let highScore = localStorage.getItem('tetrisHighScore') || 0;
-        highScoreElement.innerText = highScore;
-
-        // ระบบ Particles, Screen Shake และ Floating Texts
+        // Shared Effect Systems (Particles & Floating Text)
         let particles = [];
         let floatingTexts = [];
         let shakeAmount = 0;
+        let activeCanvas = null; // อ้างอิง canvas ที่กำลังเล่นอยู่เพื่อให้ effect สั่นถูกอัน
 
-        function createExplosion(y) {
-            shakeAmount = 8; // สั่งจอแกว่งหนักๆ
-            sfx.clear();
-            canvas.style.boxShadow = "0 0 40px rgba(124, 58, 237, 0.8)"; // แฟลชขอบจอ
-            setTimeout(() => { canvas.style.boxShadow = "0 0 20px rgba(99, 102, 241, 0.2)"; }, 200);
-
-            for (let x = 0; x < 10; x++) {
-                const colorIndex = arena[y][x];
-                if (colorIndex !== 0) {
-                    const color = colors[colorIndex];
-                    // กระจายอนุภาค 8 เม็ดต่อ 1 บล็อก!
-                    for (let i = 0; i < 8; i++) {
-                        particles.push({
-                            x: x + 0.5 + (Math.random() - 0.5),
-                            y: y + 0.5 + (Math.random() - 0.5),
-                            vx: (Math.random() - 0.5) * 0.6,
-                            vy: (Math.random() - 0.5) * 0.6 - 0.1,
-                            life: 1.0 + Math.random() * 0.5,
-                            color: color,
-                            size: Math.random() * 0.25 + 0.05
-                        });
-                    }
-                }
+        function spawnParticles(x, y, colorIndex) {
+            const color = colors[colorIndex] || '#ffffff';
+            for (let i = 0; i < 6; i++) {
+                particles.push({
+                    x: x + 0.5 + (Math.random() - 0.5), y: y + 0.5 + (Math.random() - 0.5),
+                    vx: (Math.random() - 0.5) * 0.6, vy: (Math.random() - 0.5) * 0.6 - 0.1,
+                    life: 1.0 + Math.random() * 0.5, color: color, size: Math.random() * 0.25 + 0.05
+                });
             }
         }
 
-        function updateEffects() {
-            // Update Particles
+        function updateSharedEffects() {
             for (let i = particles.length - 1; i >= 0; i--) {
                 let p = particles[i];
-                p.x += p.vx;
-                p.y += p.vy;
-                p.vy += 0.01; // Gravity ดึงลงเบาๆ
-                p.life -= 0.04;
+                p.x += p.vx; p.y += p.vy; p.vy += 0.01; p.life -= 0.04;
                 if (p.life <= 0) particles.splice(i, 1);
             }
-
-            // Update Floating Texts
             for (let i = floatingTexts.length - 1; i >= 0; i--) {
-                floatingTexts[i].life--;
-                floatingTexts[i].y -= 0.02; // ลอยขึ้นช้าๆ
+                floatingTexts[i].life--; floatingTexts[i].y -= 0.02;
                 if (floatingTexts[i].life <= 0) floatingTexts.splice(i, 1);
             }
-
-            // Update Screen Shake (ใช้ CSS Transform แกว่งตัว Canvas)
-            if (shakeAmount > 0) {
-                const dx = (Math.random() - 0.5) * shakeAmount;
-                const dy = (Math.random() - 0.5) * shakeAmount;
-                canvas.style.transform = `translate(${dx}px, ${dy}px)`;
-                shakeAmount *= 0.8; // ค่อยๆ ลดแรงสั่น
-                if(shakeAmount < 0.5) {
-                    shakeAmount = 0;
-                    canvas.style.transform = `translate(0px, 0px)`;
-                }
+            if (shakeAmount > 0 && activeCanvas) {
+                activeCanvas.style.transform = `translate(${(Math.random() - 0.5) * shakeAmount}px, ${(Math.random() - 0.5) * shakeAmount}px)`;
+                shakeAmount *= 0.8;
+                if(shakeAmount < 0.5) { shakeAmount = 0; activeCanvas.style.transform = `translate(0px, 0px)`; }
             }
         }
 
-        function drawParticles() {
+        function drawSharedEffects(ctx) {
             particles.forEach(p => {
-                context.globalAlpha = p.life > 1 ? 1 : p.life;
-                context.fillStyle = p.color;
-                
-                // ใส่แสง Glow ให้สะใจ
-                context.shadowBlur = 10;
-                context.shadowColor = p.color;
-                
-                context.beginPath();
-                context.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-                context.fill();
+                ctx.globalAlpha = p.life > 1 ? 1 : p.life;
+                ctx.fillStyle = p.color; ctx.shadowBlur = 10; ctx.shadowColor = p.color;
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
             });
-            context.shadowBlur = 0;
-            context.globalAlpha = 1.0;
-        }
+            ctx.shadowBlur = 0; ctx.globalAlpha = 1.0;
 
-        function drawFloatingTexts() {
             floatingTexts.forEach(ft => {
-                context.save();
-                context.globalAlpha = ft.life / ft.maxLife;
-                context.fillStyle = '#67e8f9'; // สีฟ้าสว่าง
-                context.shadowBlur = 5;
-                context.shadowColor = '#0891b2';
-                context.font = "bold 1px 'Orbitron', sans-serif";
-                context.textAlign = "center";
-                context.fillText(ft.text, ft.x, ft.y);
-                
-                // ขอบตัวอักษรให้อ่านง่ายขึ้น
-                context.lineWidth = 0.05;
-                context.strokeStyle = 'white';
-                context.strokeText(ft.text, ft.x, ft.y);
-                context.restore();
+                ctx.save();
+                ctx.globalAlpha = ft.life / ft.maxLife;
+                ctx.fillStyle = ft.color || '#67e8f9'; ctx.shadowBlur = 5; ctx.shadowColor = '#0891b2';
+                ctx.font = "bold 1px 'Orbitron', sans-serif"; ctx.textAlign = "center";
+                ctx.fillText(ft.text, ft.x, ft.y);
+                ctx.lineWidth = 0.05; ctx.strokeStyle = 'white'; ctx.strokeText(ft.text, ft.x, ft.y);
+                ctx.restore();
             });
         }
 
-        // สเกลขนาดบล็อก
-        context.scale(20, 20);
+        // ================= UI NAVIGATION =================
+        function switchMode(mode) {
+            initAudio();
+            document.getElementById('main-menu').classList.add('hidden');
+            document.getElementById('tetris-view').classList.add('hidden');
+            document.getElementById('puzzle-view').classList.add('hidden');
 
-        // สีของบล็อก (Neon Style)
-        const colors = [
-            null, '#06b6d4', '#3b82f6', '#f97316', '#eab308', '#22c55e', '#a855f7', '#ef4444'
-        ];
+            currentMode = mode;
+            isPaused = false;
+            
+            if (mode === 'tetris') {
+                document.getElementById('tetris-view').classList.remove('hidden');
+                document.getElementById('tetris-view').classList.add('flex');
+                activeCanvas = document.getElementById('tetris-canvas');
+                resizeCanvases();
+                startTetrisGame();
+            } else if (mode === 'puzzle') {
+                document.getElementById('puzzle-view').classList.remove('hidden');
+                document.getElementById('puzzle-view').classList.add('flex');
+                activeCanvas = document.getElementById('puzzle-canvas');
+                resizeCanvases();
+                startPuzzleGame();
+            }
+        }
 
-        function createPiece(type) {
+        function goToMenu() {
+            isPaused = true;
+            document.getElementById('pause-overlay').classList.add('hidden');
+            document.getElementById('pause-overlay').classList.remove('flex');
+            
+            document.getElementById('tetris-view').classList.add('hidden');
+            document.getElementById('tetris-view').classList.remove('flex');
+            document.getElementById('puzzle-view').classList.add('hidden');
+            document.getElementById('puzzle-view').classList.remove('flex');
+            
+            document.getElementById('main-menu').classList.remove('hidden');
+            currentMode = 'menu';
+        }
+
+        function togglePause() {
+            if (currentMode === 'menu' || (currentMode==='tetris' && tetrisGameOver) || (currentMode==='puzzle' && puzzleGameOver)) return;
+            isPaused = !isPaused;
+            const overlay = document.getElementById('pause-overlay');
+            if (isPaused) {
+                overlay.classList.remove('hidden'); overlay.classList.add('flex');
+            } else {
+                overlay.classList.add('hidden'); overlay.classList.remove('flex');
+                if (currentMode === 'tetris') { tetrisLastTime = performance.now(); requestAnimationFrame(updateTetris); }
+                if (currentMode === 'puzzle') { requestAnimationFrame(updatePuzzle); }
+            }
+        }
+
+        function restartCurrentGame() {
+            togglePause();
+            if (currentMode === 'tetris') startTetrisGame();
+            if (currentMode === 'puzzle') startPuzzleGame();
+        }
+
+        // Resize Handlers
+        function resizeCanvases() {
+            if (currentMode === 'tetris') {
+                const wrapper = document.getElementById('tetris-wrapper');
+                const container = document.getElementById('tetris-container');
+                const scale = Math.min(container.clientWidth / 10, container.clientHeight / 20);
+                wrapper.style.width = (scale * 10) + 'px'; wrapper.style.height = (scale * 20) + 'px';
+            } else if (currentMode === 'puzzle') {
+                const wrapper = document.getElementById('puzzle-wrapper');
+                const container = document.getElementById('puzzle-container');
+                // Puzzle canvas logical ratio is 10 width : 14 height (10x10 board + 4 for tray)
+                const scale = Math.min(container.clientWidth / 10, container.clientHeight / 14);
+                wrapper.style.width = (scale * 10) + 'px'; wrapper.style.height = (scale * 14) + 'px';
+            }
+        }
+        window.addEventListener('resize', resizeCanvases);
+
+        // ================= TETRIS LOGIC =================
+        const tetrisCanvas = document.getElementById('tetris-canvas');
+        const tetrisCtx = tetrisCanvas.getContext('2d');
+        tetrisCtx.scale(20, 20); // 200x400 => 10x20
+        
+        let tetrisArena = createMatrix(10, 20);
+        let tetrisPlayer = { pos: {x: 0, y: 0}, matrix: null, score: 0 };
+        let tetrisHighScore = localStorage.getItem('tetrisHighScore') || 0;
+        document.getElementById('tetris-highscore').innerText = tetrisHighScore;
+        
+        let tetrisDropCounter = 0; let tetrisDropInterval = 1000;
+        let tetrisLastTime = 0; let tetrisGameOver = true; let tetrisAnimId = null;
+
+        function createTetrisPiece(type) {
             if (type === 'I') return [[0,1,0,0],[0,1,0,0],[0,1,0,0],[0,1,0,0]];
             if (type === 'J') return [[0,2,0],[0,2,0],[2,2,0]];
             if (type === 'L') return [[0,3,0],[0,3,0],[0,3,3]];
@@ -428,299 +430,466 @@
             if (type === 'Z') return [[7,7,0],[0,7,7],[0,0,0]];
         }
 
-        function createMatrix(w, h) {
-            const matrix = [];
-            while (h--) matrix.push(new Array(w).fill(0));
-            return matrix;
-        }
-
-        function draw() {
-            // เคลียร์พื้นหลัง
-            context.fillStyle = '#020617';
-            context.fillRect(0, 0, 10, 20);
-
-            // วาดเส้นตาราง
-            context.lineWidth = 0.02;
-            context.strokeStyle = 'rgba(255, 255, 255, 0.05)';
-            for(let i = 0; i < 10; i++) { context.beginPath(); context.moveTo(i, 0); context.lineTo(i, 20); context.stroke(); }
-            for(let i = 0; i < 20; i++) { context.beginPath(); context.moveTo(0, i); context.lineTo(10, i); context.stroke(); }
-
-            drawMatrix(arena, {x: 0, y: 0});
-            
-            if (player.matrix) {
-                drawGhost(); // วาดเงาก่อน
-                drawMatrix(player.matrix, player.pos); // วาดตัวจริงทับ
+        function drawBlock(ctx, x, y, value, isGhost = false) {
+            if (value === 0) return;
+            ctx.fillStyle = isGhost ? '#ffffff' : colors[value];
+            ctx.fillRect(x, y, 1, 1);
+            if (!isGhost) {
+                ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.fillRect(x, y, 1, 0.1); ctx.fillRect(x, y, 0.1, 1);
+                ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.fillRect(x, y + 0.9, 1, 0.1); ctx.fillRect(x + 0.9, y, 0.1, 1);
             }
-            
-            drawParticles();
-            drawFloatingTexts();
         }
 
-        // ฟังก์ชันวาดเงา (Ghost Piece)
-        function drawGhost() {
-            const ghost = {
-                matrix: player.matrix,
-                pos: { x: player.pos.x, y: player.pos.y }
-            };
-            // เลื่อนเงาลงไปจนกว่าจะชน
-            while (!collide(arena, ghost)) {
-                ghost.pos.y++;
-            }
-            ghost.pos.y--; // ถอยกลับมา 1 ช่องก่อนชน
-            
-            // วาดเงาแบบโปร่งแสง
-            context.globalAlpha = 0.15;
-            drawMatrix(ghost.matrix, ghost.pos, true);
-            context.globalAlpha = 1.0;
-        }
-
-        function drawMatrix(matrix, offset, isGhost = false) {
-            if (!matrix) return;
+        function drawTetrisMatrix(matrix, offset, isGhost=false) {
             matrix.forEach((row, y) => {
                 row.forEach((value, x) => {
-                    if (value !== 0) {
-                        context.fillStyle = isGhost ? '#ffffff' : colors[value];
-                        context.fillRect(x + offset.x, y + offset.y, 1, 1);
-                        
-                        if (!isGhost) {
-                            context.fillStyle = 'rgba(255, 255, 255, 0.3)';
-                            context.fillRect(x + offset.x, y + offset.y, 1, 0.1);
-                            context.fillRect(x + offset.x, y + offset.y, 0.1, 1);
-                            
-                            context.fillStyle = 'rgba(0, 0, 0, 0.3)';
-                            context.fillRect(x + offset.x, y + offset.y + 0.9, 1, 0.1);
-                            context.fillRect(x + offset.x + 0.9, y + offset.y, 0.1, 1);
-                        }
-                    }
+                    if(value !== 0) drawBlock(tetrisCtx, x + offset.x, y + offset.y, value, isGhost);
                 });
             });
         }
 
-        function merge(arena, player) {
-            player.matrix.forEach((row, y) => {
-                row.forEach((value, x) => {
-                    if (value !== 0) {
-                        arena[y + player.pos.y][x + player.pos.x] = value;
-                    }
-                });
-            });
-        }
-
-        function collide(arena, player) {
-            const m = player.matrix;
-            const o = player.pos;
+        function tetrisCollide(arena, player) {
+            const m = player.matrix; const o = player.pos;
             for (let y = 0; y < m.length; ++y) {
                 for (let x = 0; x < m[y].length; ++x) {
-                    if (m[y][x] !== 0 && (arena[y + o.y] && arena[y + o.y][x + o.x]) !== 0) {
-                        return true;
-                    }
+                    if (m[y][x] !== 0 && (arena[y + o.y] && arena[y + o.y][x + o.x]) !== 0) return true;
                 }
             }
             return false;
         }
 
-        function arenaSweep() {
-            let rowCount = 1;
-            let linesCleared = 0;
-            let scoreGained = 0;
-            let textY = 0;
-            
-            outer: for (let y = arena.length - 1; y >= 0; --y) {
-                for (let x = 0; x < arena[y].length; ++x) {
-                    if (arena[y][x] === 0) continue outer;
-                }
-                
-                createExplosion(y);
-                linesCleared++;
-                if (textY === 0) textY = y; // จำตำแหน่งระเบิดเพื่อแสดงข้อความ
-
-                const row = arena.splice(y, 1)[0].fill(0);
-                arena.unshift(row);
-                ++y;
-
-                scoreGained += rowCount * 100;
-                rowCount *= 2;
-            }
-            
-            if(linesCleared > 0) {
-                shakeAmount = 8; // เขย่าจออีกรอบถ้าได้แต้ม
-                player.score += scoreGained;
-                
-                // สุ่มคำชมตามจำนวนแถวที่เคลียร์ได้
-                const compliments = ["GOOD!", "GREAT!", "AWESOME!"];
-                const textStr = linesCleared >= 4 ? "TETRIS! +" + scoreGained : compliments[linesCleared - 1] + " +" + scoreGained;
-                
-                floatingTexts.push({
-                    x: 5, // กึ่งกลางกระดานแนวนอน
-                    y: textY,
-                    text: textStr,
-                    life: 60, // แสดงอยู่บนจอนาน 60 เฟรม
-                    maxLife: 60
+        function tetrisMerge(arena, player) {
+            player.matrix.forEach((row, y) => {
+                row.forEach((value, x) => {
+                    if (value !== 0) arena[y + player.pos.y][x + player.pos.x] = value;
                 });
-            }
+            });
         }
 
-        function playerDrop() {
-            player.pos.y++;
-            if (collide(arena, player)) {
-                player.pos.y--;
-                merge(arena, player);
-                sfx.drop(); // เสียงกระแทกพื้น
-                shakeAmount = 2; // สั่นเบาๆ ตอนตกพื้น
-                playerReset();
-                arenaSweep();
-                updateScore();
-            }
-            dropCounter = 0;
-        }
-
-        function playerMove(offset) {
-            player.pos.x += offset;
-            if (collide(arena, player)) {
-                player.pos.x -= offset;
-            } else {
-                sfx.move(); // เสียงเลื่อน
-            }
-        }
-
-        function playerRotate(dir) {
-            const pos = player.pos.x;
-            let offset = 1;
-            rotate(player.matrix, dir);
-            while (collide(arena, player)) {
-                player.pos.x += offset;
-                offset = -(offset + (offset > 0 ? 1 : -1));
-                if (offset > player.matrix[0].length) {
-                    rotate(player.matrix, -dir);
-                    player.pos.x = pos;
-                    return;
-                }
-            }
-            sfx.rotate(); // เสียงหมุน
-        }
-
-        function rotate(matrix, dir) {
-            for (let y = 0; y < matrix.length; ++y) {
-                for (let x = 0; x < y; ++x) {
-                    [matrix[x][y], matrix[y][x]] = [matrix[y][x], matrix[x][y]];
-                }
-            }
-            if (dir > 0) matrix.forEach(row => row.reverse());
-            else matrix.reverse();
-        }
-
-        function playerReset() {
+        function tetrisReset() {
             const pieces = 'IJLOSZT';
-            player.matrix = createPiece(pieces[pieces.length * Math.random() | 0]);
-            player.pos.y = 0;
-            player.pos.x = (arena[0].length / 2 | 0) - (player.matrix[0].length / 2 | 0);
-            
-            if (collide(arena, player)) {
-                gameOver = true;
-                sfx.gameover(); // เสียง Game Over
-                overlay.classList.remove('hidden');
-                overlayTitle.innerText = "GAME OVER";
-                overlayTitle.classList.replace('text-white', 'text-red-500');
-                overlayMsg.innerHTML = `FINAL SCORE: <span class="text-cyan-400 font-bold">${player.score}</span>`;
-                startBtn.innerText = "RETRY";
+            tetrisPlayer.matrix = createTetrisPiece(pieces[pieces.length * Math.random() | 0]);
+            tetrisPlayer.pos.y = 0; tetrisPlayer.pos.x = (tetrisArena[0].length / 2 | 0) - (tetrisPlayer.matrix[0].length / 2 | 0);
+            if (tetrisCollide(tetrisArena, tetrisPlayer)) {
+                tetrisGameOver = true;
+                sfx.gameover();
+                document.getElementById('tetris-overlay').classList.remove('hidden');
+                document.querySelector('#tetris-msg span').innerText = tetrisPlayer.score;
             }
         }
 
-        let dropCounter = 0;
-        let dropInterval = 1000;
-        let lastTime = 0;
-        let gameOver = true;
-
-        function update(time = 0) {
-            if (gameOver || isPaused) return; // เช็คสถานะ Pause เพิ่มเติม
-            const deltaTime = time - lastTime;
-            lastTime = time;
-
-            dropCounter += deltaTime;
-            if (dropCounter > dropInterval) playerDrop();
-
-            updateEffects();
-            draw();
-            requestAnimationFrame(update);
-        }
-
-        function updateScore() {
-            scoreElement.innerText = player.score;
-            if (player.score > highScore) {
-                highScore = player.score;
-                localStorage.setItem('tetrisHighScore', highScore);
-                highScoreElement.innerText = highScore;
+        function tetrisSweep() {
+            let rowCount = 1; let linesCleared = 0; let scoreGained = 0; let textY = 0;
+            outer: for (let y = tetrisArena.length - 1; y >= 0; --y) {
+                for (let x = 0; x < tetrisArena[y].length; ++x) { if (tetrisArena[y][x] === 0) continue outer; }
+                // Explode line
+                for(let x=0; x<10; x++) spawnParticles(x, y, tetrisArena[y][x]);
+                
+                linesCleared++; if (textY === 0) textY = y;
+                const row = tetrisArena.splice(y, 1)[0].fill(0);
+                tetrisArena.unshift(row); ++y;
+                scoreGained += rowCount * 100; rowCount *= 2;
             }
-            let newLevel = Math.floor(player.score / 500) + 1;
-            levelElement.innerText = newLevel;
-            dropInterval = Math.max(100, 1000 - (newLevel * 100)); 
+            if(linesCleared > 0) {
+                sfx.clear(); shakeAmount = 8; tetrisPlayer.score += scoreGained;
+                const msgs = ["GOOD!", "GREAT!", "AWESOME!"];
+                floatingTexts.push({ x: 5, y: textY, text: linesCleared >= 4 ? "TETRIS! +" + scoreGained : msgs[linesCleared-1] + " +" + scoreGained, life: 60, maxLife: 60 });
+            }
         }
 
-        const arena = createMatrix(10, 20);
-        const player = { pos: {x: 0, y: 0}, matrix: null, score: 0 };
-
-        function startGame() {
-            initAudio(); // ปลดล็อกและเริ่มต้นระบบเสียง
-            arena.forEach(row => row.fill(0));
-            player.score = 0;
-            particles = [];
-            floatingTexts = [];
-            shakeAmount = 0;
-            dropInterval = 1000;
-            updateScore();
-            gameOver = false;
-            overlay.classList.add('hidden');
-            overlayTitle.classList.replace('text-red-500', 'text-white');
-            playerReset();
-            update();
+        function updateTetrisScore() {
+            document.getElementById('tetris-score').innerText = tetrisPlayer.score;
+            if (tetrisPlayer.score > tetrisHighScore) {
+                tetrisHighScore = tetrisPlayer.score; localStorage.setItem('tetrisHighScore', tetrisHighScore);
+                document.getElementById('tetris-highscore').innerText = tetrisHighScore;
+            }
+            let lvl = Math.floor(tetrisPlayer.score / 500) + 1;
+            document.getElementById('tetris-level').innerText = lvl;
+            tetrisDropInterval = Math.max(100, 1000 - (lvl * 100));
         }
 
-        startBtn.addEventListener('click', startGame);
+        function tetrisDrop() {
+            tetrisPlayer.pos.y++;
+            if (tetrisCollide(tetrisArena, tetrisPlayer)) {
+                tetrisPlayer.pos.y--; tetrisMerge(tetrisArena, tetrisPlayer);
+                sfx.drop(); shakeAmount = 2;
+                tetrisReset(); tetrisSweep(); updateTetrisScore();
+            }
+            tetrisDropCounter = 0;
+        }
 
-        // --- Controls ---
-        document.addEventListener('keydown', event => {
-            if (gameOver) return;
-            if (event.keyCode === 80 || event.keyCode === 27) { togglePause(); } // กด P หรือ Esc เพื่อ Pause
+        function tetrisMove(offset) {
+            tetrisPlayer.pos.x += offset;
+            if (tetrisCollide(tetrisArena, tetrisPlayer)) tetrisPlayer.pos.x -= offset;
+            else sfx.move();
+        }
+
+        function tetrisRotate(dir) {
+            const pos = tetrisPlayer.pos.x; let offset = 1;
+            const matrix = tetrisPlayer.matrix;
+            for (let y = 0; y < matrix.length; ++y) {
+                for (let x = 0; x < y; ++x) [matrix[x][y], matrix[y][x]] = [matrix[y][x], matrix[x][y]];
+            }
+            if (dir > 0) matrix.forEach(row => row.reverse()); else matrix.reverse();
             
-            if (isPaused) return; // ห้ามขยับตอนเกมหยุด
-            
-            if (event.keyCode === 37) { playerMove(-1); }
-            else if (event.keyCode === 39) { playerMove(1); }
-            else if (event.keyCode === 40) { playerDrop(); }
-            else if (event.keyCode === 38) { playerRotate(1); }
-        });
+            while (tetrisCollide(tetrisArena, tetrisPlayer)) {
+                tetrisPlayer.pos.x += offset; offset = -(offset + (offset > 0 ? 1 : -1));
+                if (offset > matrix[0].length) {
+                    // Revert
+                    if (dir > 0) matrix.forEach(row => row.reverse()); else matrix.reverse();
+                    for (let y = 0; y < matrix.length; ++y) {
+                        for (let x = 0; x < y; ++x) [matrix[x][y], matrix[y][x]] = [matrix[y][x], matrix[x][y]];
+                    }
+                    tetrisPlayer.pos.x = pos; return;
+                }
+            }
+            sfx.rotate();
+        }
 
-        const btnLeft = document.getElementById('btn-left');
-        const btnRight = document.getElementById('btn-right');
-        const btnRotate = document.getElementById('btn-rotate');
-        const btnDown = document.getElementById('btn-down');
+        function drawTetris() {
+            tetrisCtx.fillStyle = '#020617'; tetrisCtx.fillRect(0, 0, 10, 20);
+            tetrisCtx.lineWidth = 0.02; tetrisCtx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+            for(let i=0; i<=10; i++) { tetrisCtx.beginPath(); tetrisCtx.moveTo(i,0); tetrisCtx.lineTo(i,20); tetrisCtx.stroke(); }
+            for(let i=0; i<=20; i++) { tetrisCtx.beginPath(); tetrisCtx.moveTo(0,i); tetrisCtx.lineTo(10,i); tetrisCtx.stroke(); }
 
-        function bindControl(btn, action) {
+            drawTetrisMatrix(tetrisArena, {x:0, y:0});
+            if (tetrisPlayer.matrix && !tetrisGameOver) {
+                // Ghost
+                const ghost = { matrix: tetrisPlayer.matrix, pos: { x: tetrisPlayer.pos.x, y: tetrisPlayer.pos.y } };
+                while (!tetrisCollide(tetrisArena, ghost)) ghost.pos.y++;
+                ghost.pos.y--;
+                tetrisCtx.globalAlpha = 0.15; drawTetrisMatrix(ghost.matrix, ghost.pos, true); tetrisCtx.globalAlpha = 1.0;
+                
+                drawTetrisMatrix(tetrisPlayer.matrix, tetrisPlayer.pos);
+            }
+            drawSharedEffects(tetrisCtx);
+        }
+
+        function updateTetris(time = 0) {
+            if (currentMode !== 'tetris' || isPaused) return;
+            if (!tetrisGameOver) {
+                const deltaTime = time - tetrisLastTime; tetrisLastTime = time;
+                tetrisDropCounter += deltaTime;
+                if (tetrisDropCounter > tetrisDropInterval) tetrisDrop();
+            }
+            updateSharedEffects(); drawTetris();
+            tetrisAnimId = requestAnimationFrame(updateTetris);
+        }
+
+        function startTetrisGame() {
+            if(tetrisAnimId) cancelAnimationFrame(tetrisAnimId);
+            tetrisArena.forEach(row => row.fill(0));
+            tetrisPlayer.score = 0; particles = []; floatingTexts = []; shakeAmount = 0; tetrisDropInterval = 1000;
+            updateTetrisScore(); tetrisGameOver = false;
+            document.getElementById('tetris-overlay').classList.add('hidden');
+            tetrisReset(); tetrisLastTime = performance.now();
+            updateTetris(tetrisLastTime);
+        }
+
+        // --- Tetris Touch Controls ---
+        let tetrisDownInterval;
+        const startTetrisDrop = (e) => { e.preventDefault(); if(tetrisGameOver || isPaused || currentMode !== 'tetris') return; tetrisDrop(); clearInterval(tetrisDownInterval); tetrisDownInterval = setInterval(tetrisDrop, 80); };
+        const stopTetrisDrop = () => clearInterval(tetrisDownInterval);
+
+        const bindBtn = (id, action) => {
+            const btn = document.getElementById(id);
             btn.addEventListener('mousedown', (e) => { e.preventDefault(); action(); });
             btn.addEventListener('touchstart', (e) => { e.preventDefault(); action(); }, { passive: false });
+        };
+        bindBtn('btn-left', () => { if(!tetrisGameOver && !isPaused && currentMode==='tetris') tetrisMove(-1); });
+        bindBtn('btn-right', () => { if(!tetrisGameOver && !isPaused && currentMode==='tetris') tetrisMove(1); });
+        bindBtn('btn-rotate', () => { if(!tetrisGameOver && !isPaused && currentMode==='tetris') tetrisRotate(1); });
+        
+        const btnDown = document.getElementById('btn-down');
+        btnDown.addEventListener('mousedown', startTetrisDrop); btnDown.addEventListener('touchstart', startTetrisDrop, { passive: false });
+        window.addEventListener('mouseup', stopTetrisDrop); window.addEventListener('touchend', stopTetrisDrop);
+
+        // ================= BLOCK PUZZLE LOGIC (1010! Style) =================
+        const puzzleCanvas = document.getElementById('puzzle-canvas');
+        const pCtx = puzzleCanvas.getContext('2d');
+        pCtx.scale(20, 20); // 200x280 => logical 10x14 (Board is 10x10, Tray is 10x4 at bottom)
+        
+        let puzzleBoard = createMatrix(10, 10);
+        let puzzleScore = 0;
+        let puzzleHighScore = localStorage.getItem('puzzleHighScore') || 0;
+        document.getElementById('puzzle-highscore').innerText = puzzleHighScore;
+        let puzzleGameOver = true; let puzzleAnimId = null;
+
+        // Shape definitions for Block Puzzle
+        const puzzleShapes = [
+            { m: [[1]], c: 1 }, // 1x1 dot
+            { m: [[1,1]], c: 2 }, { m: [[1],[1]], c: 2 }, // 2x1, 1x2
+            { m: [[1,1,1]], c: 3 }, { m: [[1],[1],[1]], c: 3 }, // 3x1, 1x3
+            { m: [[1,1,1,1]], c: 4 }, { m: [[1],[1],[1],[1]], c: 4 }, // 4x1, 1x4
+            { m: [[1,1,1,1,1]], c: 5 }, { m: [[1],[1],[1],[1],[1]], c: 5 }, // 5x1, 1x5
+            { m: [[1,1],[1,1]], c: 6 }, // 2x2 square
+            { m: [[1,1,1],[1,1,1],[1,1,1]], c: 7 }, // 3x3 square
+            { m: [[1,1],[1,0]], c: 8 }, { m: [[1,1],[0,1]], c: 8 }, { m: [[1,0],[1,1]], c: 8 }, { m: [[0,1],[1,1]], c: 8 }, // 2x2 Ls
+            { m: [[1,1,1],[1,0,0],[1,0,0]], c: 9 }, { m: [[1,1,1],[0,0,1],[0,0,1]], c: 9 }, { m: [[1,0,0],[1,0,0],[1,1,1]], c: 9 }, { m: [[0,0,1],[0,0,1],[1,1,1]], c: 9 } // 3x3 Ls
+        ];
+
+        let trayPieces = [null, null, null]; // 3 slots
+        let draggingPiece = null; // { idx: slotIndex, m: matrix, c: color, rx: realX, ry: realY, cx: startX, cy: startY }
+
+        function fillTray() {
+            for(let i=0; i<3; i++) {
+                if(!trayPieces[i]) trayPieces[i] = puzzleShapes[Math.floor(Math.random() * puzzleShapes.length)];
+            }
+            checkPuzzleGameOver();
         }
 
-        bindControl(btnLeft, () => { if(!gameOver && !isPaused) playerMove(-1); });
-        bindControl(btnRight, () => { if(!gameOver && !isPaused) playerMove(1); });
-        bindControl(btnRotate, () => { if(!gameOver && !isPaused) playerRotate(1); });
+        function checkPuzzleFits(matrix, ox, oy) {
+            for(let y=0; y<matrix.length; y++) {
+                for(let x=0; x<matrix[0].length; x++) {
+                    if (matrix[y][x]) {
+                        if (oy+y < 0 || oy+y >= 10 || ox+x < 0 || ox+x >= 10) return false; // out of bounds
+                        if (puzzleBoard[oy+y][ox+x] !== 0) return false; // collision
+                    }
+                }
+            }
+            return true;
+        }
 
-        let downInterval;
-        const startDrop = (e) => { 
-            e.preventDefault(); 
-            if(gameOver || isPaused) return;
-            playerDrop();
-            clearInterval(downInterval);
-            downInterval = setInterval(playerDrop, 80); 
-        };
-        const stopDrop = () => clearInterval(downInterval);
+        function checkPuzzleGameOver() {
+            let canPlaceAny = false;
+            let hasPieces = false;
+            for(let i=0; i<3; i++) {
+                if(trayPieces[i]) {
+                    hasPieces = true;
+                    // Test all board positions
+                    let fits = false;
+                    for(let y=0; y<10 && !fits; y++) {
+                        for(let x=0; x<10 && !fits; x++) {
+                            if (checkPuzzleFits(trayPieces[i].m, x, y)) fits = true;
+                        }
+                    }
+                    if (fits) canPlaceAny = true;
+                }
+            }
+            if (hasPieces && !canPlaceAny) {
+                puzzleGameOver = true;
+                sfx.gameover();
+                document.getElementById('puzzle-overlay').classList.remove('hidden');
+                document.querySelector('#puzzle-msg span').innerText = puzzleScore;
+            }
+        }
 
-        btnDown.addEventListener('mousedown', startDrop);
-        btnDown.addEventListener('touchstart', startDrop, { passive: false });
-        window.addEventListener('mouseup', stopDrop);
-        window.addEventListener('touchend', stopDrop);
+        function sweepPuzzleBoard() {
+            let fullRows = []; let fullCols = [];
+            // Check Rows
+            for(let y=0; y<10; y++) {
+                let isFull = true;
+                for(let x=0; x<10; x++) if(puzzleBoard[y][x] === 0) isFull = false;
+                if(isFull) fullRows.push(y);
+            }
+            // Check Cols
+            for(let x=0; x<10; x++) {
+                let isFull = true;
+                for(let y=0; y<10; y++) if(puzzleBoard[y][x] === 0) isFull = false;
+                if(isFull) fullCols.push(x);
+            }
 
-        // วาดเริ่มต้น
-        draw();
+            let clearedCells = 0;
+            // Clear and explode
+            fullRows.forEach(y => {
+                for(let x=0; x<10; x++) {
+                    if(puzzleBoard[y][x] !== 0) { spawnParticles(x, y, puzzleBoard[y][x]); puzzleBoard[y][x] = 0; clearedCells++; }
+                }
+            });
+            fullCols.forEach(x => {
+                for(let y=0; y<10; y++) {
+                    if(puzzleBoard[y][x] !== 0) { spawnParticles(x, y, puzzleBoard[y][x]); puzzleBoard[y][x] = 0; clearedCells++; }
+                }
+            });
+
+            if (clearedCells > 0) {
+                sfx.clear(); shakeAmount = Math.min(10, clearedCells);
+                let lines = fullRows.length + fullCols.length;
+                let comboScore = lines * 100 + (lines > 1 ? lines * 50 : 0);
+                puzzleScore += comboScore;
+                floatingTexts.push({ x: 5, y: 5, text: (lines > 1 ? "COMBO! " : "CLEARED! ") + "+" + comboScore, life: 60, maxLife: 60, color: '#e879f9' });
+                updatePuzzleScore();
+            }
+        }
+
+        function updatePuzzleScore() {
+            document.getElementById('puzzle-score').innerText = puzzleScore;
+            if (puzzleScore > puzzleHighScore) {
+                puzzleHighScore = puzzleScore; localStorage.setItem('puzzleHighScore', puzzleHighScore);
+                document.getElementById('puzzle-highscore').innerText = puzzleHighScore;
+            }
+        }
+
+        function drawPuzzleMatrix(ctx, matrix, colorIndex, offset, scale = 1.0, alpha = 1.0) {
+            ctx.save();
+            ctx.translate(offset.x, offset.y);
+            ctx.scale(scale, scale);
+            ctx.globalAlpha = alpha;
+            matrix.forEach((row, y) => {
+                row.forEach((value, x) => {
+                    if (value !== 0) drawBlock(ctx, x, y, colorIndex);
+                });
+            });
+            ctx.restore();
+        }
+
+        function drawPuzzle() {
+            pCtx.fillStyle = '#020617'; pCtx.fillRect(0, 0, 10, 14); // Fill whole logical canvas
+            
+            // Draw Grid 10x10
+            pCtx.lineWidth = 0.02; pCtx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+            for(let i=0; i<=10; i++) { pCtx.beginPath(); pCtx.moveTo(i,0); pCtx.lineTo(i,10); pCtx.stroke(); }
+            for(let i=0; i<=10; i++) { pCtx.beginPath(); pCtx.moveTo(0,i); pCtx.lineTo(10,i); pCtx.stroke(); }
+            
+            // Draw Divider
+            pCtx.lineWidth = 0.05; pCtx.strokeStyle = 'rgba(99, 102, 241, 0.4)';
+            pCtx.beginPath(); pCtx.moveTo(0, 10.2); pCtx.lineTo(10, 10.2); pCtx.stroke();
+
+            // Draw Board Pieces
+            for(let y=0; y<10; y++) {
+                for(let x=0; x<10; x++) {
+                    if (puzzleBoard[y][x] !== 0) drawBlock(pCtx, x, y, puzzleBoard[y][x]);
+                }
+            }
+
+            // Draw Tray Pieces
+            const trayCenters = [1.66, 5.0, 8.33]; // X centers for 3 slots
+            const trayY = 11.5; // Y center for slots
+
+            for(let i=0; i<3; i++) {
+                if(trayPieces[i] && (!draggingPiece || draggingPiece.idx !== i)) {
+                    let w = trayPieces[i].m[0].length; let h = trayPieces[i].m.length;
+                    // Scale down to fit in tray
+                    let scale = Math.min(2.5 / w, 2.5 / h, 0.6); 
+                    drawPuzzleMatrix(pCtx, trayPieces[i].m, trayPieces[i].c, { x: trayCenters[i] - (w*scale/2), y: trayY - (h*scale/2) }, scale);
+                }
+            }
+
+            // Draw Dragging Piece & Shadow
+            if (draggingPiece) {
+                let w = draggingPiece.m[0].length; let h = draggingPiece.m.length;
+                let boardX = Math.round(draggingPiece.rx); let boardY = Math.round(draggingPiece.ry);
+                
+                // Show shadow if hovering over board
+                if (boardY < 10) {
+                    if (checkPuzzleFits(draggingPiece.m, boardX, boardY)) {
+                        drawPuzzleMatrix(pCtx, draggingPiece.m, draggingPiece.c, {x: boardX, y: boardY}, 1.0, 0.3); // Valid Shadow
+                    }
+                }
+                
+                // Draw actual dragged piece floating
+                drawPuzzleMatrix(pCtx, draggingPiece.m, draggingPiece.c, {x: draggingPiece.rx, y: draggingPiece.ry}, 1.0, 0.9);
+            }
+
+            drawSharedEffects(pCtx);
+        }
+
+        function updatePuzzle() {
+            if (currentMode !== 'puzzle' || isPaused) return;
+            updateSharedEffects(); drawPuzzle();
+            puzzleAnimId = requestAnimationFrame(updatePuzzle);
+        }
+
+        function startPuzzleGame() {
+            if(puzzleAnimId) cancelAnimationFrame(puzzleAnimId);
+            puzzleBoard = createMatrix(10, 10);
+            puzzleScore = 0; particles = []; floatingTexts = []; shakeAmount = 0;
+            trayPieces = [null, null, null]; fillTray();
+            updatePuzzleScore(); puzzleGameOver = false;
+            document.getElementById('puzzle-overlay').classList.add('hidden');
+            updatePuzzle();
+        }
+
+        // --- Puzzle Drag & Drop Input ---
+        function getPuzzlePointerPos(e) {
+            const rect = puzzleCanvas.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            // Map physical pixels to logical 10x14 canvas
+            return {
+                x: ((clientX - rect.left) / rect.width) * 10,
+                y: ((clientY - rect.top) / rect.height) * 14
+            };
+        }
+
+        function onPuzzlePointerDown(e) {
+            if (currentMode !== 'puzzle' || puzzleGameOver || isPaused) return;
+            e.preventDefault();
+            const pos = getPuzzlePointerPos(e);
+            const trayCenters = [1.66, 5.0, 8.33];
+            
+            // Check if pointer hit any tray slot
+            if (pos.y > 10.5) {
+                for(let i=0; i<3; i++) {
+                    if (trayPieces[i] && Math.abs(pos.x - trayCenters[i]) < 1.5) {
+                        sfx.move();
+                        draggingPiece = {
+                            idx: i, m: trayPieces[i].m, c: trayPieces[i].c,
+                            rx: pos.x - (trayPieces[i].m[0].length/2), 
+                            ry: pos.y - (trayPieces[i].m.length) - 1 // Offset so it floats above finger
+                        };
+                        break;
+                    }
+                }
+            }
+        }
+
+        function onPuzzlePointerMove(e) {
+            if (currentMode !== 'puzzle' || !draggingPiece || puzzleGameOver || isPaused) return;
+            e.preventDefault();
+            const pos = getPuzzlePointerPos(e);
+            draggingPiece.rx = pos.x - (draggingPiece.m[0].length/2);
+            draggingPiece.ry = pos.y - (draggingPiece.m.length) - 1.5; // Offset higher
+        }
+
+        function onPuzzlePointerUp(e) {
+            if (currentMode !== 'puzzle' || !draggingPiece || puzzleGameOver || isPaused) return;
+            e.preventDefault();
+            
+            // Snap to nearest grid
+            let boardX = Math.round(draggingPiece.rx);
+            let boardY = Math.round(draggingPiece.ry);
+
+            if (checkPuzzleFits(draggingPiece.m, boardX, boardY)) {
+                // Place block
+                sfx.place();
+                let blocksPlaced = 0;
+                for(let y=0; y<draggingPiece.m.length; y++) {
+                    for(let x=0; x<draggingPiece.m[0].length; x++) {
+                        if (draggingPiece.m[y][x]) {
+                            puzzleBoard[boardY+y][boardX+x] = draggingPiece.c;
+                            blocksPlaced++;
+                        }
+                    }
+                }
+                puzzleScore += blocksPlaced * 10;
+                updatePuzzleScore();
+                trayPieces[draggingPiece.idx] = null; // Remove from tray
+                sweepPuzzleBoard();
+                
+                // Refill tray if empty
+                if (!trayPieces[0] && !trayPieces[1] && !trayPieces[2]) fillTray();
+                else checkPuzzleGameOver();
+            } else {
+                // Return to tray (do nothing, just nullify drag)
+            }
+            draggingPiece = null;
+        }
+
+        puzzleCanvas.addEventListener('mousedown', onPuzzlePointerDown); puzzleCanvas.addEventListener('touchstart', onPuzzlePointerDown, {passive: false});
+        window.addEventListener('mousemove', onPuzzlePointerMove); window.addEventListener('touchmove', onPuzzlePointerMove, {passive: false});
+        window.addEventListener('mouseup', onPuzzlePointerUp); window.addEventListener('touchend', onPuzzlePointerUp);
+
+        // ================= GLOBAL KEYBOARD =================
+        document.addEventListener('keydown', event => {
+            if (event.keyCode === 80 || event.keyCode === 27) togglePause();
+            if (currentMode === 'tetris' && !isPaused && !tetrisGameOver) {
+                if (event.keyCode === 37) tetrisMove(-1);
+                else if (event.keyCode === 39) tetrisMove(1);
+                else if (event.keyCode === 40) tetrisDrop();
+                else if (event.keyCode === 38) tetrisRotate(1);
+            }
+        });
 
     </script>
 </body>
