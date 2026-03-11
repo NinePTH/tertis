@@ -16,7 +16,7 @@
         
         body {
             font-family: 'Prompt', sans-serif;
-            touch-action: none; /* ป้องกันการเลื่อนจอ */
+            touch-action: none;
             background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
             color: #f8fafc;
             overflow: hidden;
@@ -83,7 +83,6 @@
 </head>
 <body class="w-full h-[100dvh] flex flex-col items-center justify-center relative">
 
-    <!-- ================= MAIN MENU ================= -->
     <div id="main-menu" class="absolute inset-0 z-50 flex flex-col items-center justify-center p-4 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+PHBhdGggZD0iTTAgMGg0MHY0MEgweiIgZmlsbD0ibm9uZSIvPPHBhdGggZD0iTTAgMGg0MHY0MEgweiIgZmlsbC1vcGFjaXR5PSIuMDUiIGZpbGw9IiNmZmYiLz48L3N2Zz4=')]">
         <h1 class="text-4xl sm:text-6xl font-bold tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-500 font-epic mb-2 drop-shadow-[0_0_15px_rgba(34,211,238,0.5)] text-center leading-tight">
             NEON<br>BLOCKS
@@ -97,14 +96,12 @@
             </button>
             <button onclick="switchMode('puzzle')" class="menu-btn glass-panel py-4 px-6 rounded-2xl flex flex-col items-center group">
                 <span class="text-xl font-epic font-bold text-purple-400 group-hover:text-white transition">BLOCK PUZZLE</span>
-                <span class="text-xs text-slate-400 mt-1">ลากวาง ระเบิดแนวตั้ง/นอน</span>
+                <span class="text-xs text-slate-400 mt-1">ลากวาง ระเบิดแนวตั้ง/นอน (8x8)</span>
             </button>
         </div>
     </div>
 
-    <!-- ================= GAME CONTAINER (TETRIS) ================= -->
     <div id="tetris-view" class="hidden w-full max-w-md px-2 py-2 sm:px-4 sm:py-4 flex-col h-full relative">
-        <!-- Top Nav -->
         <div class="absolute top-2 left-2 sm:top-4 sm:left-4 z-10 flex gap-2">
             <button onclick="goToMenu()" class="w-8 h-8 rounded-full btn-modern flex items-center justify-center text-slate-300 hover:text-red-400">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5m7 7-7-7 7-7"/></svg>
@@ -149,7 +146,6 @@
             </div>
         </div>
 
-        <!-- Tetris Controls -->
         <div class="grid grid-cols-3 gap-1 sm:gap-2 w-full mt-auto mb-1 px-1 md:hidden">
             <button id="btn-left" class="btn-modern h-12 rounded-xl flex items-center justify-center text-2xl"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg></button>
             <button id="btn-rotate" class="btn-modern h-12 rounded-xl flex items-center justify-center text-2xl"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg></button>
@@ -158,9 +154,7 @@
         </div>
     </div>
 
-    <!-- ================= GAME CONTAINER (BLOCK PUZZLE) ================= -->
     <div id="puzzle-view" class="hidden w-full max-w-md px-2 py-2 sm:px-4 sm:py-4 flex-col h-full relative">
-        <!-- Top Nav -->
         <div class="absolute top-2 left-2 sm:top-4 sm:left-4 z-10 flex gap-2">
             <button onclick="goToMenu()" class="w-8 h-8 rounded-full btn-modern flex items-center justify-center text-slate-300 hover:text-red-400">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5m7 7-7-7 7-7"/></svg>
@@ -188,11 +182,9 @@
             </div>
         </div>
 
-        <!-- Puzzle Canvas Area -->
         <div id="puzzle-container" class="flex-1 w-full relative flex justify-center items-center my-1 min-h-0">
             <div id="puzzle-wrapper" class="relative">
-                <!-- Canvas ของ Puzzle สัดส่วนความกว้าง:ความสูง = 10:14 (บอร์ด 10x10 + พื้นที่วางบล็อกด้านล่าง 10x4) -->
-                <canvas id="puzzle-canvas" width="200" height="280" class="w-full h-full block rounded-lg"></canvas>
+                <canvas id="puzzle-canvas" width="200" height="300" class="w-full h-full block rounded-lg bg-[#020617] shadow-[0_0_20px_rgba(99,102,241,0.2)] border border-[#6366f14d] transition-shadow duration-200"></canvas>
                 
                 <div id="puzzle-overlay" class="absolute inset-0 glass-panel rounded-lg flex flex-col items-center justify-center z-10 hidden" style="backdrop-filter: blur(5px);">
                     <div class="text-center px-4">
@@ -203,11 +195,9 @@
                 </div>
             </div>
         </div>
-        <!-- พื้นที่ว่างด้านล่างเพื่อชดเชยปุ่มควบคุมที่หายไป ให้ layout ดูสมดุล -->
         <div class="h-4 w-full md:hidden"></div>
     </div>
 
-    <!-- ================= SHARED PAUSE OVERLAY ================= -->
     <div id="pause-overlay" class="hidden fixed inset-0 z-[60] flex-col items-center justify-center px-4" style="backdrop-filter: blur(8px); background: rgba(15, 23, 42, 0.7);">
         <div class="glass-panel w-full max-w-[240px] rounded-2xl p-6 flex flex-col items-center border border-cyan-500/30 text-center shadow-2xl">
             <h2 class="text-3xl font-epic font-bold text-cyan-400 mb-6 tracking-widest animate-pulse">PAUSED</h2>
@@ -257,7 +247,7 @@
             move: () => playTone(300, 'sine', 0.05, 0.08),
             rotate: () => playTone(450, 'square', 0.05, 0.03),
             drop: () => playTone(150, 'sawtooth', 0.1, 0.1),
-            place: () => playTone(200, 'sine', 0.1, 0.15), // เสียงวางบล็อก (Puzzle)
+            place: () => playTone(200, 'sine', 0.1, 0.15),
             clear: () => {
                 playTone(440, 'square', 0.1, 0.1); 
                 setTimeout(() => playTone(554, 'square', 0.1, 0.1), 50); 
@@ -273,10 +263,8 @@
         };
 
         // ================= GLOBAL STATE & UTILS =================
-        let currentMode = 'menu'; // 'menu', 'tetris', 'puzzle'
+        let currentMode = 'menu';
         let isPaused = false;
-        
-        // Colors for both modes (Neon Style)
         const colors = [null, '#06b6d4', '#3b82f6', '#f97316', '#eab308', '#22c55e', '#a855f7', '#ef4444', '#ec4899', '#14b8a6'];
 
         function createMatrix(w, h) {
@@ -285,11 +273,11 @@
             return matrix;
         }
 
-        // Shared Effect Systems (Particles & Floating Text)
+        // Shared Effect Systems
         let particles = [];
         let floatingTexts = [];
         let shakeAmount = 0;
-        let activeCanvas = null; // อ้างอิง canvas ที่กำลังเล่นอยู่เพื่อให้ effect สั่นถูกอัน
+        let activeCanvas = null;
 
         function spawnParticles(x, y, colorIndex) {
             const color = colors[colorIndex] || '#ffffff';
@@ -396,7 +384,6 @@
             if (currentMode === 'puzzle') startPuzzleGame();
         }
 
-        // Resize Handlers
         function resizeCanvases() {
             if (currentMode === 'tetris') {
                 const wrapper = document.getElementById('tetris-wrapper');
@@ -406,9 +393,9 @@
             } else if (currentMode === 'puzzle') {
                 const wrapper = document.getElementById('puzzle-wrapper');
                 const container = document.getElementById('puzzle-container');
-                // Puzzle canvas logical ratio is 10 width : 14 height (10x10 board + 4 for tray)
-                const scale = Math.min(container.clientWidth / 10, container.clientHeight / 14);
-                wrapper.style.width = (scale * 10) + 'px'; wrapper.style.height = (scale * 14) + 'px';
+                // Puzzle 8x8 Board + 4 blocks for tray = 8:12 Ratio
+                const scale = Math.min(container.clientWidth / 8, container.clientHeight / 12);
+                wrapper.style.width = (scale * 8) + 'px'; wrapper.style.height = (scale * 12) + 'px';
             }
         }
         window.addEventListener('resize', resizeCanvases);
@@ -416,7 +403,7 @@
         // ================= TETRIS LOGIC =================
         const tetrisCanvas = document.getElementById('tetris-canvas');
         const tetrisCtx = tetrisCanvas.getContext('2d');
-        tetrisCtx.scale(20, 20); // 200x400 => 10x20
+        tetrisCtx.scale(20, 20); 
         
         let tetrisArena = createMatrix(10, 20);
         let tetrisPlayer = { pos: {x: 0, y: 0}, matrix: null, score: 0 };
@@ -488,7 +475,6 @@
             let rowCount = 1; let linesCleared = 0; let scoreGained = 0; let textY = 0;
             outer: for (let y = tetrisArena.length - 1; y >= 0; --y) {
                 for (let x = 0; x < tetrisArena[y].length; ++x) { if (tetrisArena[y][x] === 0) continue outer; }
-                // Explode line
                 for(let x=0; x<10; x++) spawnParticles(x, y, tetrisArena[y][x]);
                 
                 linesCleared++; if (textY === 0) textY = y;
@@ -541,7 +527,6 @@
             while (tetrisCollide(tetrisArena, tetrisPlayer)) {
                 tetrisPlayer.pos.x += offset; offset = -(offset + (offset > 0 ? 1 : -1));
                 if (offset > matrix[0].length) {
-                    // Revert
                     if (dir > 0) matrix.forEach(row => row.reverse()); else matrix.reverse();
                     for (let y = 0; y < matrix.length; ++y) {
                         for (let x = 0; x < y; ++x) [matrix[x][y], matrix[y][x]] = [matrix[y][x], matrix[x][y]];
@@ -560,7 +545,6 @@
 
             drawTetrisMatrix(tetrisArena, {x:0, y:0});
             if (tetrisPlayer.matrix && !tetrisGameOver) {
-                // Ghost
                 const ghost = { matrix: tetrisPlayer.matrix, pos: { x: tetrisPlayer.pos.x, y: tetrisPlayer.pos.y } };
                 while (!tetrisCollide(tetrisArena, ghost)) ghost.pos.y++;
                 ghost.pos.y--;
@@ -592,7 +576,6 @@
             updateTetris(tetrisLastTime);
         }
 
-        // --- Tetris Touch Controls ---
         let tetrisDownInterval;
         const startTetrisDrop = (e) => { e.preventDefault(); if(tetrisGameOver || isPaused || currentMode !== 'tetris') return; tetrisDrop(); clearInterval(tetrisDownInterval); tetrisDownInterval = setInterval(tetrisDrop, 80); };
         const stopTetrisDrop = () => clearInterval(tetrisDownInterval);
@@ -610,32 +593,34 @@
         btnDown.addEventListener('mousedown', startTetrisDrop); btnDown.addEventListener('touchstart', startTetrisDrop, { passive: false });
         window.addEventListener('mouseup', stopTetrisDrop); window.addEventListener('touchend', stopTetrisDrop);
 
-        // ================= BLOCK PUZZLE LOGIC (1010! Style) =================
+        // ================= BLOCK PUZZLE LOGIC (8x8 Style) =================
         const puzzleCanvas = document.getElementById('puzzle-canvas');
         const pCtx = puzzleCanvas.getContext('2d');
-        pCtx.scale(20, 20); // 200x280 => logical 10x14 (Board is 10x10, Tray is 10x4 at bottom)
+        // สเกล = 25 เพราะขนาด 200x300 ให้เป็น logical 8x12 (Board 8x8 + 4 blocks below)
+        pCtx.scale(25, 25); 
         
-        let puzzleBoard = createMatrix(10, 10);
+        let puzzleBoard = createMatrix(8, 8);
         let puzzleScore = 0;
         let puzzleHighScore = localStorage.getItem('puzzleHighScore') || 0;
         document.getElementById('puzzle-highscore').innerText = puzzleHighScore;
         let puzzleGameOver = true; let puzzleAnimId = null;
 
-        // Shape definitions for Block Puzzle
+        // Shape definitions (เพิ่มโอกาสเกิดของบล็อกเล็กๆ ลงไปนิดเดียวตามที่ผู้ใช้ต้องการ)
         const puzzleShapes = [
-            { m: [[1]], c: 1 }, // 1x1 dot
-            { m: [[1,1]], c: 2 }, { m: [[1],[1]], c: 2 }, // 2x1, 1x2
+            { m: [[1]], c: 1 }, { m: [[1]], c: 1 }, // 1x1 dot (+1 extra chance)
+            { m: [[1,1]], c: 2 }, { m: [[1],[1]], c: 2 },
+            { m: [[1,1]], c: 2 }, { m: [[1],[1]], c: 2 }, // 2x1, 1x2 (+1 extra pair chance)
             { m: [[1,1,1]], c: 3 }, { m: [[1],[1],[1]], c: 3 }, // 3x1, 1x3
             { m: [[1,1,1,1]], c: 4 }, { m: [[1],[1],[1],[1]], c: 4 }, // 4x1, 1x4
             { m: [[1,1,1,1,1]], c: 5 }, { m: [[1],[1],[1],[1],[1]], c: 5 }, // 5x1, 1x5
-            { m: [[1,1],[1,1]], c: 6 }, // 2x2 square
+            { m: [[1,1],[1,1]], c: 6 }, { m: [[1,1],[1,1]], c: 6 }, // 2x2 square (+1 extra chance)
             { m: [[1,1,1],[1,1,1],[1,1,1]], c: 7 }, // 3x3 square
             { m: [[1,1],[1,0]], c: 8 }, { m: [[1,1],[0,1]], c: 8 }, { m: [[1,0],[1,1]], c: 8 }, { m: [[0,1],[1,1]], c: 8 }, // 2x2 Ls
             { m: [[1,1,1],[1,0,0],[1,0,0]], c: 9 }, { m: [[1,1,1],[0,0,1],[0,0,1]], c: 9 }, { m: [[1,0,0],[1,0,0],[1,1,1]], c: 9 }, { m: [[0,0,1],[0,0,1],[1,1,1]], c: 9 } // 3x3 Ls
         ];
 
-        let trayPieces = [null, null, null]; // 3 slots
-        let draggingPiece = null; // { idx: slotIndex, m: matrix, c: color, rx: realX, ry: realY, cx: startX, cy: startY }
+        let trayPieces = [null, null, null]; 
+        let draggingPiece = null; 
 
         function fillTray() {
             for(let i=0; i<3; i++) {
@@ -648,8 +633,8 @@
             for(let y=0; y<matrix.length; y++) {
                 for(let x=0; x<matrix[0].length; x++) {
                     if (matrix[y][x]) {
-                        if (oy+y < 0 || oy+y >= 10 || ox+x < 0 || ox+x >= 10) return false; // out of bounds
-                        if (puzzleBoard[oy+y][ox+x] !== 0) return false; // collision
+                        if (oy+y < 0 || oy+y >= 8 || ox+x < 0 || ox+x >= 8) return false; 
+                        if (puzzleBoard[oy+y][ox+x] !== 0) return false; 
                     }
                 }
             }
@@ -662,10 +647,9 @@
             for(let i=0; i<3; i++) {
                 if(trayPieces[i]) {
                     hasPieces = true;
-                    // Test all board positions
                     let fits = false;
-                    for(let y=0; y<10 && !fits; y++) {
-                        for(let x=0; x<10 && !fits; x++) {
+                    for(let y=0; y<8 && !fits; y++) {
+                        for(let x=0; x<8 && !fits; x++) {
                             if (checkPuzzleFits(trayPieces[i].m, x, y)) fits = true;
                         }
                     }
@@ -682,28 +666,25 @@
 
         function sweepPuzzleBoard() {
             let fullRows = []; let fullCols = [];
-            // Check Rows
-            for(let y=0; y<10; y++) {
+            for(let y=0; y<8; y++) {
                 let isFull = true;
-                for(let x=0; x<10; x++) if(puzzleBoard[y][x] === 0) isFull = false;
+                for(let x=0; x<8; x++) if(puzzleBoard[y][x] === 0) isFull = false;
                 if(isFull) fullRows.push(y);
             }
-            // Check Cols
-            for(let x=0; x<10; x++) {
+            for(let x=0; x<8; x++) {
                 let isFull = true;
-                for(let y=0; y<10; y++) if(puzzleBoard[y][x] === 0) isFull = false;
+                for(let y=0; y<8; y++) if(puzzleBoard[y][x] === 0) isFull = false;
                 if(isFull) fullCols.push(x);
             }
 
             let clearedCells = 0;
-            // Clear and explode
             fullRows.forEach(y => {
-                for(let x=0; x<10; x++) {
+                for(let x=0; x<8; x++) {
                     if(puzzleBoard[y][x] !== 0) { spawnParticles(x, y, puzzleBoard[y][x]); puzzleBoard[y][x] = 0; clearedCells++; }
                 }
             });
             fullCols.forEach(x => {
-                for(let y=0; y<10; y++) {
+                for(let y=0; y<8; y++) {
                     if(puzzleBoard[y][x] !== 0) { spawnParticles(x, y, puzzleBoard[y][x]); puzzleBoard[y][x] = 0; clearedCells++; }
                 }
             });
@@ -713,7 +694,7 @@
                 let lines = fullRows.length + fullCols.length;
                 let comboScore = lines * 100 + (lines > 1 ? lines * 50 : 0);
                 puzzleScore += comboScore;
-                floatingTexts.push({ x: 5, y: 5, text: (lines > 1 ? "COMBO! " : "CLEARED! ") + "+" + comboScore, life: 60, maxLife: 60, color: '#e879f9' });
+                floatingTexts.push({ x: 4, y: 4, text: (lines > 1 ? "COMBO! " : "CLEARED! ") + "+" + comboScore, life: 60, maxLife: 60, color: '#e879f9' });
                 updatePuzzleScore();
             }
         }
@@ -740,50 +721,42 @@
         }
 
         function drawPuzzle() {
-            pCtx.fillStyle = '#020617'; pCtx.fillRect(0, 0, 10, 14); // Fill whole logical canvas
+            pCtx.fillStyle = '#020617'; pCtx.fillRect(0, 0, 8, 12); 
             
-            // Draw Grid 10x10
             pCtx.lineWidth = 0.02; pCtx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
-            for(let i=0; i<=10; i++) { pCtx.beginPath(); pCtx.moveTo(i,0); pCtx.lineTo(i,10); pCtx.stroke(); }
-            for(let i=0; i<=10; i++) { pCtx.beginPath(); pCtx.moveTo(0,i); pCtx.lineTo(10,i); pCtx.stroke(); }
+            for(let i=0; i<=8; i++) { pCtx.beginPath(); pCtx.moveTo(i,0); pCtx.lineTo(i,8); pCtx.stroke(); }
+            for(let i=0; i<=8; i++) { pCtx.beginPath(); pCtx.moveTo(0,i); pCtx.lineTo(8,i); pCtx.stroke(); }
             
-            // Draw Divider
             pCtx.lineWidth = 0.05; pCtx.strokeStyle = 'rgba(99, 102, 241, 0.4)';
-            pCtx.beginPath(); pCtx.moveTo(0, 10.2); pCtx.lineTo(10, 10.2); pCtx.stroke();
+            pCtx.beginPath(); pCtx.moveTo(0, 8.2); pCtx.lineTo(8, 8.2); pCtx.stroke();
 
-            // Draw Board Pieces
-            for(let y=0; y<10; y++) {
-                for(let x=0; x<10; x++) {
+            for(let y=0; y<8; y++) {
+                for(let x=0; x<8; x++) {
                     if (puzzleBoard[y][x] !== 0) drawBlock(pCtx, x, y, puzzleBoard[y][x]);
                 }
             }
 
-            // Draw Tray Pieces
-            const trayCenters = [1.66, 5.0, 8.33]; // X centers for 3 slots
-            const trayY = 11.5; // Y center for slots
+            const trayCenters = [1.33, 4.0, 6.66]; 
+            const trayY = 10.0; 
 
             for(let i=0; i<3; i++) {
                 if(trayPieces[i] && (!draggingPiece || draggingPiece.idx !== i)) {
                     let w = trayPieces[i].m[0].length; let h = trayPieces[i].m.length;
-                    // Scale down to fit in tray
-                    let scale = Math.min(2.5 / w, 2.5 / h, 0.6); 
+                    let scale = Math.min(2.0 / w, 2.0 / h, 0.6); 
                     drawPuzzleMatrix(pCtx, trayPieces[i].m, trayPieces[i].c, { x: trayCenters[i] - (w*scale/2), y: trayY - (h*scale/2) }, scale);
                 }
             }
 
-            // Draw Dragging Piece & Shadow
             if (draggingPiece) {
                 let w = draggingPiece.m[0].length; let h = draggingPiece.m.length;
                 let boardX = Math.round(draggingPiece.rx); let boardY = Math.round(draggingPiece.ry);
                 
-                // Show shadow if hovering over board
-                if (boardY < 10) {
+                if (boardY < 8) {
                     if (checkPuzzleFits(draggingPiece.m, boardX, boardY)) {
-                        drawPuzzleMatrix(pCtx, draggingPiece.m, draggingPiece.c, {x: boardX, y: boardY}, 1.0, 0.3); // Valid Shadow
+                        drawPuzzleMatrix(pCtx, draggingPiece.m, draggingPiece.c, {x: boardX, y: boardY}, 1.0, 0.3); 
                     }
                 }
                 
-                // Draw actual dragged piece floating
                 drawPuzzleMatrix(pCtx, draggingPiece.m, draggingPiece.c, {x: draggingPiece.rx, y: draggingPiece.ry}, 1.0, 0.9);
             }
 
@@ -798,7 +771,7 @@
 
         function startPuzzleGame() {
             if(puzzleAnimId) cancelAnimationFrame(puzzleAnimId);
-            puzzleBoard = createMatrix(10, 10);
+            puzzleBoard = createMatrix(8, 8);
             puzzleScore = 0; particles = []; floatingTexts = []; shakeAmount = 0;
             trayPieces = [null, null, null]; fillTray();
             updatePuzzleScore(); puzzleGameOver = false;
@@ -806,15 +779,13 @@
             updatePuzzle();
         }
 
-        // --- Puzzle Drag & Drop Input ---
         function getPuzzlePointerPos(e) {
             const rect = puzzleCanvas.getBoundingClientRect();
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
             const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            // Map physical pixels to logical 10x14 canvas
             return {
-                x: ((clientX - rect.left) / rect.width) * 10,
-                y: ((clientY - rect.top) / rect.height) * 14
+                x: ((clientX - rect.left) / rect.width) * 8,
+                y: ((clientY - rect.top) / rect.height) * 12
             };
         }
 
@@ -822,17 +793,16 @@
             if (currentMode !== 'puzzle' || puzzleGameOver || isPaused) return;
             e.preventDefault();
             const pos = getPuzzlePointerPos(e);
-            const trayCenters = [1.66, 5.0, 8.33];
+            const trayCenters = [1.33, 4.0, 6.66];
             
-            // Check if pointer hit any tray slot
-            if (pos.y > 10.5) {
+            if (pos.y > 8.5) {
                 for(let i=0; i<3; i++) {
                     if (trayPieces[i] && Math.abs(pos.x - trayCenters[i]) < 1.5) {
                         sfx.move();
                         draggingPiece = {
                             idx: i, m: trayPieces[i].m, c: trayPieces[i].c,
                             rx: pos.x - (trayPieces[i].m[0].length/2), 
-                            ry: pos.y - (trayPieces[i].m.length) - 1 // Offset so it floats above finger
+                            ry: pos.y - (trayPieces[i].m.length) - 1.5
                         };
                         break;
                     }
@@ -845,19 +815,17 @@
             e.preventDefault();
             const pos = getPuzzlePointerPos(e);
             draggingPiece.rx = pos.x - (draggingPiece.m[0].length/2);
-            draggingPiece.ry = pos.y - (draggingPiece.m.length) - 1.5; // Offset higher
+            draggingPiece.ry = pos.y - (draggingPiece.m.length) - 1.5;
         }
 
         function onPuzzlePointerUp(e) {
             if (currentMode !== 'puzzle' || !draggingPiece || puzzleGameOver || isPaused) return;
             e.preventDefault();
             
-            // Snap to nearest grid
             let boardX = Math.round(draggingPiece.rx);
             let boardY = Math.round(draggingPiece.ry);
 
             if (checkPuzzleFits(draggingPiece.m, boardX, boardY)) {
-                // Place block
                 sfx.place();
                 let blocksPlaced = 0;
                 for(let y=0; y<draggingPiece.m.length; y++) {
@@ -870,14 +838,11 @@
                 }
                 puzzleScore += blocksPlaced * 10;
                 updatePuzzleScore();
-                trayPieces[draggingPiece.idx] = null; // Remove from tray
+                trayPieces[draggingPiece.idx] = null; 
                 sweepPuzzleBoard();
                 
-                // Refill tray if empty
                 if (!trayPieces[0] && !trayPieces[1] && !trayPieces[2]) fillTray();
                 else checkPuzzleGameOver();
-            } else {
-                // Return to tray (do nothing, just nullify drag)
             }
             draggingPiece = null;
         }
@@ -907,4 +872,5 @@
     </script>
 </body>
 </html>
+
 
